@@ -1,4 +1,3 @@
-// routes/adminActivityRoutes.js
 const router = require("express").Router();
 const { getAdminActivity } = require("../controllers/adminActivityController");
 

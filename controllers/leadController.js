@@ -1,7 +1,7 @@
 const Lead = require("../models/Lead");
 const Employee = require("../models/Employee");
 const { createUserActivity } = require("./userActivityController");
-const {createAdminActivity} = require("./adminActivityController");
+const { createAdminActivity } = require("./adminActivityController");
 
 const getLeads = async (req, res) => {
   try {
@@ -36,8 +36,7 @@ const assignEmployee = async (language) => {
       $inc: { assignedleads: 1 },
     });
     return idSelected;
-  } catch (err) {
-  }
+  } catch (err) {}
 };
 
 const createLead = async (req, res) => {
@@ -47,21 +46,21 @@ const createLead = async (req, res) => {
   }
 
   const assignedto = await assignEmployee(req.body.preferredlanguage);
-  if(assignedto){
-  await createUserActivity({
-    userId: assignedto,
-    message: `You were assigned a lead`,
-    type: "lead_assigned",
-  });
-}
+  if (assignedto) {
+    await createUserActivity({
+      userId: assignedto,
+      message: `You were assigned a lead`,
+      type: "lead_assigned",
+    });
+  }
   const employee = await Employee.findById(assignedto);
-  if(employee){
-  await createAdminActivity({
-    message: `You assigned a lead to ${employee.firstname} ${employee.lastname}`,
-    type: "lead_assigned",
-    meta: { lead: req.body.name, employeeId: assignedto },
-  });
-}
+  if (employee) {
+    await createAdminActivity({
+      message: `You assigned a lead to ${employee.firstname} ${employee.lastname}`,
+      type: "lead_assigned",
+      meta: { lead: req.body.name, employeeId: assignedto },
+    });
+  }
   const assignedat = new Date();
   try {
     const newLead = new Lead({
@@ -76,7 +75,6 @@ const createLead = async (req, res) => {
   }
 };
 
-
 const editLead = async (req, res) => {
   try {
     const id = req.params.id;
@@ -88,6 +86,9 @@ const editLead = async (req, res) => {
       if (req?.body?.status === "Closed" && lead.status === "Ongoing") {
         await Employee.findByIdAndUpdate(req.body.employeeId, {
           $inc: { closedleads: 1 },
+        });
+        await Employee.findByIdAndUpdate(req.body.employeeId, {
+          $inc: { assignedleads: -1 },
         });
       }
     }
@@ -151,7 +152,6 @@ const getLeadsPaginated = async (req, res) => {
       total,
     });
   } catch (err) {
-
     res.status(500).json({ error: err.message });
   }
 };
